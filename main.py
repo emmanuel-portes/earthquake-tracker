@@ -1,40 +1,40 @@
-from flask import Flask, jsonify, request
+import os
+from datetime import date, datetime
 
-app: Flask = Flask(__name__)
+from load_features import filter_features
 
-features: list = [
-	{ "id": "tx2024kwiw",
-		"type": "feature",
-		"place": "55 km S of Whites City, New Mexico"
-		},
-	{ "id": "nm60584281",
-		"type": "feature",
-		"place": "84 km NW of Karluk, Alaska"
-	},
-	{ "id": "av93010189",
-		"type": "feature",
-		"place":"8 km NNW of The Geysers, CA"
-	}
-] 
+from dotenv import load_dotenv
+from oracledb import connect, Connection
 
-@app.route('/home', methods = ['GET'])
-def home():
-	data: dict = {'message':'features homepage'}
-	if request.method == 'GET':
-		return jsonify(data)
 
-@app.route('/features', methods = ['GET'])
-def get_all_features():
-	if request.method == 'GET':
-		return jsonify(features)
+def main(
+		url: str = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson',
+		connection: Connection
+	) -> None:
 
-@app.route('/features/<id>', methods = ['GET'])
-def get_feature_by_id(id: str):
-	if request.method == 'GET':
-		for feature in features:
-			if feature.get('id') == id:
-				return jsonify(feature)
+	features: list = filter_features(url)
+
+    with connection.cursor() as cursor:
+        for feature in features:
+            cursor.callproc('insert_features', feature)
 
 if __name__ == '__main__':
-	app.run(debug=True)
+	load_dotenv()
+	dsn: str = os.getenv('DSN')
+	user: str = os.getenv('DB_USER')
+	password: str = os.getenv('DB_PASSWORD')
+	wlt_loc: str = os.getenv('DB_WALLET')
+	wlt_pass: str = os.getenv('DB_WALLET_PASSWORD')
+	config: str = os.getenv('DB_CONFIG')
+
+	endtime: date = datetime.now().date()
+	url: str = f'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&endtime={endtime}'
+	
+	connection = connect(
+		user=user, password=password, dsn=dsn, 
+		config_dir=config, wallet_location=wlt_loc, wallet_password=wlt_pass 
+		)
+	
+    main(url, connection)
+
 

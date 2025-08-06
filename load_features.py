@@ -9,7 +9,7 @@ def time_format(timestamp:int) -> date:
     timestamp = timestamp / 1000
     return datetime.fromtimestamp(timestamp).date()
 
-def get_data(url: str) -> list[dict]:
+def fetch_data(url: str) -> list[dict]:
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -17,9 +17,9 @@ def get_data(url: str) -> list[dict]:
     except requests.HTTPError:
         return "something went wrong"
     
-def load_features(url: str) -> list:
+def filter_features(url: str) -> list:
 
-    features: list[list] 
+    features: list[list] = []
     data: list[dict] = get_date(url)
 
     for feature in data:
