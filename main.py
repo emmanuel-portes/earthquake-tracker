@@ -20,7 +20,7 @@ def main(
 
 if __name__ == '__main__':
 	load_dotenv()
-	dsn: str = os.getenv('DSN')
+	dsn: str = os.getenv('DSN') 
 	user: str = os.getenv('DB_USER')
 	password: str = os.getenv('DB_PASSWORD')
 	wlt_loc: str = os.getenv('DB_WALLET')
@@ -36,5 +36,4 @@ if __name__ == '__main__':
 		)
 	
     main(url, connection)
-
 
