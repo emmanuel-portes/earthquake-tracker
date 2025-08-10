@@ -9,14 +9,14 @@ from oracledb import connect, Connection
 
 def main(
 		url: str = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson',
-		connection: Connection
+        connection: Connection = None
 	) -> None:
 
 	features: list = filter_features(url)
 
-    with connection.cursor() as cursor:
-        for feature in features:
-            cursor.callproc('insert_features', feature)
+	with connection.cursor() as cursor:
+		for feature in features:
+			cursor.callproc('insert_features', feature)
 
 if __name__ == '__main__':
 	load_dotenv()
@@ -30,10 +30,10 @@ if __name__ == '__main__':
 	endtime: date = datetime.now().date()
 	url: str = f'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&endtime={endtime}'
 	
-	connection = connect(
+	connection: Connection = connect(
 		user=user, password=password, dsn=dsn, 
 		config_dir=config, wallet_location=wlt_loc, wallet_password=wlt_pass 
 		)
 	
-    main(url, connection)
+	main(url, connection)
 
