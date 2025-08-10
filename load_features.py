@@ -1,9 +1,9 @@
 import requests
 from datetime import date, datetime
 
-MIN_LATITUDE: float, MAX_LATITUDE = [-90.0, 90.0]
-MIN_MAGNITUDE: float, MAX_MAGNITUDE = [-1.0, 10.0]
-MIN_LONGITUDE: float, MAX_LONGITUDE = [-180.0, 180.0]
+MIN_LATITUDE, MAX_LATITUDE = [-90.0, 90.0]
+MIN_MAGNITUDE, MAX_MAGNITUDE = [-1.0, 10.0]
+MIN_LONGITUDE, MAX_LONGITUDE = [-180.0, 180.0]
 
 def time_format(timestamp:int) -> date:
     timestamp = timestamp / 1000
@@ -20,7 +20,7 @@ def fetch_data(url: str) -> list[dict]:
 def filter_features(url: str) -> list:
 
     features: list[list] = []
-    data: list[dict] = get_date(url)
+    data: list[dict] = fetch_data(url)
 
     for feature in data:
         temp: list = []
@@ -33,15 +33,15 @@ def filter_features(url: str) -> list:
         tsunami: bool = feature.get('properties')['tsunami']
         magtype: str = feature.get('properties')['magType']
         title: str = feature.get('properties')['title']
-        longitude: float, latitude: float, magnitude: float = feature.get('coordinates') 
+        longitude, latitude, magnitude = feature.get('coordinates') 
 
-        if (longitude is None or latitude is None or magnitude is None or 
-                title is None or url is None or place is None magType is None ):
+        if (longitude is None or latitude is None or magnitude is None or
+                title is None or url is None or place is None or magtype is None):
             continue
 
-        if (MIN_LATITUDE > latitude > MAX_LATITUDE) or 
+        if ((MIN_LATITUDE > latitude > MAX_LATITUDE) or 
                 (MIN_MAGNITUDE > magnitude > MAX_MAGNITUDE) or 
-                    (MIN_LONGITUDE > longitude > MAX_LONGITUDE):
+                    (MIN_LONGITUDE > longitude > MAX_LONGITUDE)):
             continue
 
         temp.append(featuretype)
