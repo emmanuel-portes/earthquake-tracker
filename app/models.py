@@ -1,30 +1,34 @@
-from sqlalchemy import  Column, NotNullable
+from sqlalchemy import NotNullable
 from sqlalchemy import Integer, Identity, String, Numeric, Date
+from sqlalchemy.orm import Mapped, mapped_column
 
-from sqlalchemy.ext.declarative import declarative_base
+from app import database
 
-Base = declarative_base()
-
-class Feature(Base):
+class Feature(database.Model):
     __tablename__ = 'features'
 
-    id = Column("id", Integer, primary_key=True)
-    type = Column("type", String(8), NotNullable)
-    external_id = Column("external_id", String(15), unique=True)
-    magnitude = Column("magnitude", Numeric(3,2), NotNullable)
-    place = Column("place", String(100), NotNullable)
-    event_date = Column("event_date", Date, NotNullable)
-    url = Column("url", String(75), NotNullable)
-    tsunami = Column("tsunami", Numeric(1,0), NotNullable)
-    mag_type = Column("mag_type", String(2), NotNullable)
-    title = Column("title", String(100), NotNullable)
-    longitude = Column("longitude", Numeric(15, 7), NotNullable)
-    latitude = Column("latitude", Numeric(15, 7), NotNullable)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    type: Mapped[str] = mapped_column(String(8), NotNullable)
+    external_id: Mapped[str] = mapped_column( String(15), unique=True)
+    magnitude: Mapped[float] = mapped_column(Numeric(3,2), NotNullable)
+    place: Mapped[str] = mapped_column( String(100), NotNullable)
+    event_date: Mapped[Date]  = mapped_column( Date, NotNullable)
+    url: Mapped[str] = mapped_column( String(75), NotNullable)
+    tsunami: Mapped[int] = mapped_column( Numeric(1,0), NotNullable)
+    mag_type: Mapped[str] = mapped_column(String(2), NotNullable)
+    title: Mapped[str] = mapped_column(String(100), NotNullable)
+    longitude: Mapped[float] = mapped_column( Numeric(15, 7), NotNullable)
+    latitude: Mapped[float] = mapped_column( Numeric(15, 7), NotNullable)
 
+    def __repr__(self):
+        return f"<Feature {self.external_id}>"
 
-class Comment(Base):
+class Comment(database.Model):
     __tablename__ = "comments"
 
-    id = Column("id", Integer, primary_key=True)
-    commentary = Column("commentary", String(100), NotNullable)
-    feature_id = Column("feature_id", Integer)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    commentary: Mapped[str] = mapped_column(String(100), NotNullable)
+    feature_id: Mapped[int] = mapped_column(Integer)
+
+    def __repr__(self):
+        return f"<Comment {self.id}>"
