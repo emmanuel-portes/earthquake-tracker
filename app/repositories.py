@@ -9,11 +9,10 @@ class FeaturesRepository:
     def get_features(self) -> list[Feature]:
         with self.connection as connection:
             with connection.cursor as cursor:
-                cursor
+                cursor.callproc('fn_get_features', [])
 
     def get_feature_by_id(self, id: int) -> Feature:
         pass
-
 
 class CommentsRepository:
     
