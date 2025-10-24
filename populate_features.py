@@ -10,6 +10,7 @@ from psycopg2 import connect, IntegrityError, DatabaseError, Error
 MIN_LATITUDE, MAX_LATITUDE = [-90.0, 90.0]
 MIN_MAGNITUDE, MAX_MAGNITUDE = [-1.0, 10.0]
 MIN_LONGITUDE, MAX_LONGITUDE = [-180.0, 180.0]
+MAG_TYPE: list[str] = ['md', 'ml', 'ms', 'mw', 'me', 'mi', 'mb', 'mlg']
       
 def time_format(timestamp:int) -> date:
     timestamp = timestamp / 1000
@@ -30,45 +31,49 @@ def fetch_data(url: str) -> list[dict] | dict:
 		sys.exit(1)
     
 def filter_features(url: str) -> list:
-    features: list[list] = []
-    data: list[dict] = fetch_data(url)
+	features: list[list] = []
+	data: list[dict] = fetch_data(url)
 
-    for feature in data:
-        temp: list = []
-        featuretype: str = feature.get('type')
-        externalID: str = feature.get('id')
-        mag: float = feature.get('properties')['mag']
-        place: str = feature.get('properties')['place']
-        eventDate: date = time_format(feature.get('properties')['time'])
-        url: str = feature.get('properties')['url']
-        tsunami: bool = feature.get('properties')['tsunami']
-        magtype: str = feature.get('properties')['magType']
-        title: str = feature.get('properties')['title']
-        longitude, latitude, magnitude = feature.get('geometry')['coordinates']
+	for feature in data:
+		temp: list = []
+		featuretype: str = feature.get('type')
+		externalID: str = feature.get('id')
+		mag: float = feature.get('properties')['mag']
+		place: str = feature.get('properties')['place']
+		eventDate: date = time_format(feature.get('properties')['time'])
+		url: str = feature.get('properties')['url']
+		tsunami: bool = bool(feature.get('properties')['tsunami'])
+		magtype: str = feature.get('properties')['magType']
+		title: str = feature.get('properties')['title']
+		longitude, latitude, magnitude = feature.get('geometry')['coordinates']
 
-        if (longitude is None or latitude is None or magnitude is None or
+		if (longitude is None or latitude is None or magnitude is None or
                 title is None or url is None or place is None or magtype is None):
-            continue
+			continue
 
-        if ((MIN_LATITUDE > latitude > MAX_LATITUDE) or 
+		if ((MIN_LATITUDE > latitude > MAX_LATITUDE) or 
                 (MIN_MAGNITUDE > magnitude > MAX_MAGNITUDE) or 
                     (MIN_LONGITUDE > longitude > MAX_LONGITUDE)):
-            continue
+			continue
 
-        temp.append(featuretype)
-        temp.append(externalID)
-        temp.append(mag)
-        temp.append(place)
-        temp.append(eventDate)
-        temp.append(url)
-        temp.append(tsunami)
-        temp.append(magtype)
-        temp.append(title)
-        temp.append(longitude)
-        temp.append(latitude)
+		if magtype not in MAG_TYPE: 
+			continue
 
-        features.append(temp)
-    return features	
+		temp.append(featuretype)
+		temp.append(externalID)
+		temp.append(mag)
+		temp.append(place)
+		temp.append(eventDate)
+		temp.append(url)
+		temp.append(tsunami)
+		temp.append(magtype)
+		temp.append(title)
+		temp.append(longitude)
+		temp.append(latitude)
+
+		features.append(temp)
+
+	return features	
 
 def connectDB():
 	database: str = os.getenv('DB_NAME') 
@@ -81,7 +86,7 @@ def connectDB():
 		connection = connect(
 			dbname=database, user=user, password=password, host=host, port=port
 			)
-		logging.info(f"Database connection established. {connection.version}")
+		logging.info(f"Database connection established. {connection.server_version}")
 		return connection
 	except Error as err:
 		message: str = f'Database connection error: {err}'
