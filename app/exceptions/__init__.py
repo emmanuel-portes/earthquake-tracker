@@ -10,11 +10,16 @@ class AppException(Exception):
     def to_dict(self) -> dict:
         return {
             "error":{
-                "type": self.__name__,
+                "type": self.__class__.__name__,
                 "message": self.message,
                 "status": self.status_code
             }
         }
+
+class InvalidMagTypeException(AppException):
+    '''Class Exception for invalid mag type'''
+    def __init__(self, message: str):
+        super().__init__(message, HTTPStatus.BAD_REQUEST)
 
 class FeatureNotFoundException(AppException):
     '''Class Exception for feature not found'''
