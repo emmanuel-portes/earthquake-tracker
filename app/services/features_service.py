@@ -10,10 +10,17 @@ from app.exceptions import FeatureNotFoundException
 
 class FeatureService:
 
-    def get_features(self, page:int = 1, number_of_items:int = 10) -> list[dict]:
-        data: list[Feature] = Feature.query.order_by(Feature.event_date.desc()).paginate(page=page, per_page=number_of_items)
+    def get_features(self, page:int = 1, number_of_items:int = 10,  mag_type: str = None) -> dict[dict]:
+        if mag_type is None:
+            data: list = Feature.query.order_by(Feature.event_date.desc()).paginate(page=page, per_page=number_of_items)
+
+        if mag_type is not None:
+            data: list = Feature.query.filter(Feature.mag_type == mag_type).order_by(Feature.event_date.desc()).paginate(page=page, per_page=number_of_items)
+            
         features:list[FeatureSchema] = FeatureSchema(many=True).dump(data.items)
-        return features
+        pagination: dict = {"current_page": data.page, "total": data.total, "per_page": data.per_page}
+        result: dict = {"data": features, "pagination": pagination}
+        return result
     
     def get_feature_by_id(self, id: int) -> dict:
         data: Feature | None = Feature.query.filter(Feature.feature_id == id).first()

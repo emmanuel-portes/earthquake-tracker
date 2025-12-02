@@ -2,12 +2,11 @@ from flask import Blueprint, request
 
 from http import HTTPStatus
 
+from app.constants import Constants
 from app.services.features_service import FeatureService
-
-from app.exceptions import DataNotProvidedException
+from app.exceptions import DataNotProvidedException, InvalidMagTypeException
 
 feature_service: FeatureService = FeatureService()
-
 feature = Blueprint('feature', __name__)
 
 @feature.route("/", methods=['GET'])
@@ -16,12 +15,19 @@ def home():
 
 @feature.get("/api/features")
 def get_features():
-    page: int = request.args.get("page")
-    number_of_items: int = request.args.get("no_items")
-    response: list = feature_service.get_features(page, number_of_items)
+    page: int = request.args.get("page", 1, type=int)
+    number_of_items: int = request.args.get("no_items", 10, type=int)
+    mag_type: str = request.args.get("mag_type", None, type=str)
+
+    if mag_type is not None and mag_type not in Constants.MAG_TYPES:
+        message: str = f"Cannot filter by mag type: {mag_type}"
+        raise InvalidMagTypeException(message=message)
+
+    response: dict = feature_service.get_features(page, number_of_items, mag_type)
     return {
         "status": HTTPStatus.OK, 
-        "data": response
+        "data": response.get("data", list()),
+        "pagination": response.get("pagination", dict())
     }, HTTPStatus.OK
 
 @feature.get("/api/features/<int:feature_id>")
@@ -47,7 +53,6 @@ def insert_features_comments():
         raise DataNotProvidedException("data not found in payload")
     
     response: dict = feature_service.save_feature_comment(data)
-
     return {
         "status":HTTPStatus.CREATED, 
         'message':'Comment succesfully added', "data": response
