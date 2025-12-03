@@ -16,8 +16,8 @@ class AppException(Exception):
             }
         }
 
-class InvalidMagTypeException(AppException):
-    '''Class Exception for invalid mag type'''
+class InvalidValueException(AppException):
+    '''Class Exception for invalid values'''
     def __init__(self, message: str):
         super().__init__(message, HTTPStatus.BAD_REQUEST)
 

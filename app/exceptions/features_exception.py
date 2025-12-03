@@ -40,6 +40,7 @@ def handle_orm_exception(error):
         HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
+@error.app_errorhandler(ValueError)
 @error.app_errorhandler(ValidationError)
 def handle_validation_error(error):
     platform: str = os.getenv('BOILERPLATE_ENV')
@@ -89,8 +90,8 @@ def handle_base_exception(error):
     if platform != "prod":
         return make_response(
             jsonify({
-                "name":error.__name__,
-                "message": error.description,
+                "name":error.__class__.__name__,
+                "message": error.args[0],
                 "status": HTTPStatus.INTERNAL_SERVER_ERROR
             }), HTTPStatus.INTERNAL_SERVER_ERROR
         )
