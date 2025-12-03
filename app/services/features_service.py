@@ -22,31 +22,31 @@ class FeatureService:
         result: dict = {"data": features, "pagination": pagination}
         return result
     
-    def get_feature_by_id(self, id: int) -> dict:
-        data: Feature | None = Feature.query.filter(Feature.feature_id == id).first()
+    def get_feature_by_code(self, code: int) -> dict:
+        data: Feature | None = Feature.query.filter(Feature.code == code).first()
         if data is None:
-            raise FeatureNotFoundException(f"Feature of ID: {id} was not found")
+            raise FeatureNotFoundException(f"Feature of ID: {code} was not found")
         feature: FeatureSchema = FeatureSchema().dump(data)
         return feature
         
-    def get_feature_by_external_id(self, id: str) -> dict:
-        data: Feature | None = Feature.query.filter(Feature.external_id == id).first()
+    def get_feature_by_usgs_code(self, usgs_code: str) -> dict:
+        data: Feature | None = Feature.query.filter(Feature.usgs_code == usgs_code).first()
         if data is None:
-            raise FeatureNotFoundException(f"Feature of external ID: {id} was not found")
+            raise FeatureNotFoundException(f"Feature of external ID: {usgs_code} was not found")
         feature: dict = FeatureSchema().dump(data)
         return feature
 
     def save_feature_comment(data:dict[str,str]) -> None:
         comment: dict = CommentSchema().load(data)
-        feature_id: str = comment["feature_id"] 
-        message: str = comment["commentary"]
+        usgs_code: str = comment["usgs_code"] 
+        message: str = comment["comment"]
 
-        feature: Feature = Feature.query.filter(Feature.external_id == feature_id).first()
+        feature: Feature = Feature.query.filter(Feature.usgs_code == usgs_code).first()
 
         if feature is None:
-            raise FeatureNotFoundException(f"Feature of external ID: {id} was not found")
+            raise FeatureNotFoundException(f"Feature of external ID: {usgs_code} was not found")
         
-        comment: Comment = Comment(commentary=message, feature_id=feature_id)
+        comment: Comment = Comment(comment=message, usgs_code=usgs_code)
 
         database.session.add(comment)
         database.session.commit()
