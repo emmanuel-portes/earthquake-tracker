@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from app.constants import Constants
-from marshmallow import Schema, fields, post_load, pre_load, validate, ValidationError
+from marshmallow import Schema, fields, pre_load, validate, ValidationError
 
 def validate_string_field(string: str) -> None:
     if string is None:

@@ -10,13 +10,13 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'development_tracker.db')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_DSN')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class ProductionConfig(Config):
+    DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_DSN')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    DEBUG = True
 
 config_by_name = dict(
     dev=DevelopmentConfig,

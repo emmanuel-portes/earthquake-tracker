@@ -2,18 +2,17 @@
 import logging
 from datetime import date, datetime, timedelta
 
-import requests
-
-from marshmallow import ValidationError
-
 from earthquake_tracker import app
 
 from app import database
-
 from app.schemas.feature_schema import USGSFeatureSchema
-
 from app.models.features_model import Feature
+
+import requests
+
 from sqlalchemy.exc import IntegrityError
+
+from marshmallow import ValidationError
 
 def fetch_data(url: str) -> list[dict] | dict:
 	try:
@@ -40,16 +39,17 @@ def filter_features(data: list[dict]) -> list[dict]:
 	return features	
 
 def insert_features(features: list[dict]) -> None:
-	for feature in features:
-		try:
-			usgs = Feature(**feature)
-			database.session.add(usgs)
-		except IntegrityError as err:
-			database.session.rollback()
-			logging.error(f"Something went wrong while inserting feature. {err}")
-			continue
-		finally:
-			database.session.commit()
+	with app.app_context():
+		for feature in features:
+			try:
+				usgs = Feature(**feature)
+				database.session.add(usgs)
+			except IntegrityError as err:
+				database.session.rollback()
+				logging.error(f"Something went wrong while inserting feature. {err}")
+				continue
+			finally:
+				database.session.commit()
 		
 def main(
 		url: str = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson'
@@ -63,8 +63,7 @@ def main(
 		)
 	usgs_features: list[dict] = fetch_data(url)
 	processed_features: list[dict] = filter_features(usgs_features)
-	with app.app_context():
-		insert_features(processed_features)
+	insert_features(processed_features)
 
 if __name__ == '__main__':
 	starttime: date = (datetime.now() - timedelta(days=1)).date()

@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from app.constants import Constants
 from app.services.features_service import FeatureService
-from app.exceptions import DataNotProvidedException, InvalidMagTypeException
+from app.exceptions import DataNotProvidedException, InvalidValueException
 
 feature_service: FeatureService = FeatureService()
 feature = Blueprint('feature', __name__)
@@ -21,7 +21,11 @@ def get_features():
 
     if mag_type is not None and mag_type not in Constants.MAG_TYPES:
         message: str = f"Cannot filter by mag type: {mag_type}"
-        raise InvalidMagTypeException(message=message)
+        raise InvalidValueException(message=message)
+
+    if number_of_items > Constants.PER_PAGE_LIMIT:
+        message: str = f"The limit for number of items is exceded: {number_of_items}"
+        raise InvalidValueException(message=message)
 
     response: dict = feature_service.get_features(page, number_of_items, mag_type)
     return {
