@@ -40,16 +40,14 @@ def filter_features(data: list[dict]) -> list[dict]:
 
 def insert_features(features: list[dict]) -> None:
 	with app.app_context():
-		for feature in features:
-			try:
-				usgs = Feature(**feature)
-				database.session.add(usgs)
-			except IntegrityError as err:
-				database.session.rollback()
-				logging.error(f"Something went wrong while inserting feature. {err}")
-				continue
-			finally:
-				database.session.commit()
+		try:
+			usgs = [Feature(**feature) for feature in features]
+			database.session.bulk_save_objects(usgs)
+		except IntegrityError as err:
+			database.session.rollback()
+			logging.error(f"Something went wrong while inserting feature. {err}")
+		finally:
+			database.session.commit()
 		
 def main(
 		url: str = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson'
