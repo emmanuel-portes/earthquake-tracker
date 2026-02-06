@@ -3,7 +3,7 @@ import requests
 
 import logging
 
-from app import database
+from app.database import database
 from app.schemas.feature_schema import USGSFeatureSchema
 from app.models.features_model import Feature
 
