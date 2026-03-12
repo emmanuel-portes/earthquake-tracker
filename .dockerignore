@@ -1,0 +1,5 @@
+__pychache__/
+.env
+.git
+venv/
+.myvenv/
