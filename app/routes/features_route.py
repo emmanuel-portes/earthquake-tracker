@@ -1,10 +1,16 @@
+from datetime import date, datetime, timedelta
+
 from flask import Blueprint, request
 
 from http import HTTPStatus
 
+from celery.result import AsyncResult
+
 from app.constants import Constants
 from app.services.features_service import FeatureService
 from app.exceptions import DataNotProvidedException, InvalidValueException
+
+from workers.task import ingest_into_database, test_task_queue
 
 feature_service: FeatureService = FeatureService()
 feature = Blueprint('feature', __name__)
@@ -34,17 +40,17 @@ def get_features():
         "pagination": response.get("pagination", dict())
     }, HTTPStatus.OK
 
-@feature.get("/api/features/<int:feature_id>")
-def get_feature_by_id(feature_id: int):
-    response: dict = feature_service.get_feature_by_id(feature_id)
+@feature.get("/api/features/<int:feature_code>")
+def get_feature_by_code(feature_code: int):
+    response: dict = feature_service.get_feature_by_code(feature_code)
     return {
         "status": HTTPStatus.OK, 
         "data": response
     }, HTTPStatus.OK
 
-@feature.get('/api/features/<external_id>')
-def get_feature_by_external_id(external_id: str):
-    response: dict = feature_service.get_feature_by_external_id(external_id)
+@feature.get('/api/features/<usgs_code>')
+def get_feature_by_usgs_code(usgs_code: str):
+    response: dict = feature_service.get_feature_by_usgs_code(usgs_code)
     return {
         "status": HTTPStatus.OK, 
         "data": response
@@ -61,3 +67,30 @@ def insert_features_comments():
         "status":HTTPStatus.CREATED, 
         'message':'Comment succesfully added', "data": response
     }, HTTPStatus.CREATED
+
+@feature.post("/api/features/ingest")
+def ingest_features() -> dict[str, object]:
+    starttime: date = request.args.get('starttime', None, date)
+    endtime: date = request.args.get('endtime', None, date)
+
+    if not starttime:
+        starttime = (datetime.now() - timedelta(days=1)).date()
+    if not endtime:
+        endtime: date = datetime.now().date()
+
+    url: str = f'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime={starttime}&endtime={endtime}'
+    result = ingest_into_database.delay(url)
+    return {
+        "status": HTTPStatus.CREATED,
+        "id": result.id
+    }, HTTPStatus.CREATED
+
+@feature.get("/api/features/ingest/<task_id>")
+def get_task_result(task_id: str) -> dict[str, object]:
+    result = AsyncResult(task_id)
+    return {
+        "status": HTTPStatus.OK,
+        "ready": result.ready(),
+        "successful": result.successful(),
+        "value": result.result if result.ready() else None
+    }, HTTPStatus.OK

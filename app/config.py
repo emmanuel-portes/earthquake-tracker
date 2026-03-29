@@ -9,14 +9,22 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'not_a_serious_key')
 
 class DevelopmentConfig(Config):
-    DEBUG = True
+    DEBUG=True
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_DSN')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    CELERY = dict(
+        broker_url=os.getenv("CELERY_BROKER_TRANSPORT_URL"), 
+        task_ignore_result=True
+    )
 
 class ProductionConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_DSN')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    CELERY = dict(
+        broker_url=os.getenv("CELERY_BROKER_TRANSPORT_URL"), 
+        task_ignore_result=True
+    )
 
 config_by_name = dict(
     dev=DevelopmentConfig,
