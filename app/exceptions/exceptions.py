@@ -1,18 +1,56 @@
+"""
 import os
 
 from http import HTTPStatus
 
-from flask import Blueprint, jsonify, make_response, request
-
-from werkzeug.exceptions import HTTPException, NotFound
 
 from . import AppException
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from marshmallow import ValidationError
 
-error: Blueprint = Blueprint('errors', __name__)
+from http import HTTPStatus
+
+class AppException(Exception):
+    Base class exception
+    def __init__(self, message: str, status_code: int):
+        super().__init__(message)
+        self.message: str = message
+        self.status_code: int = status_code
+
+    def to_dict(self) -> dict:
+        return {
+            "error":{
+                "type": self.__class__.__name__,
+                "message": self.message,
+                "status": self.status_code
+            }
+        }
+
+class InvalidValueException(AppException):
+    Class Exception for invalid values
+    def __init__(self, message: str):
+        super().__init__(message, HTTPStatus.BAD_REQUEST)
+
+class FeatureNotFoundException(AppException):
+    Class Exception for feature not found
+    def __init__(self, message: str):
+        super().__init__(message, HTTPStatus.NOT_FOUND)
+
+class DataNotProvidedException(AppException):
+    Class Exception for not data input provided
+    def __init__(self, message: str):
+        super().__init__(message, HTTPStatus.BAD_REQUEST)
+
+class IDNotProvidedException(AppException):
+    Class Exception for not provided External or Base ID
+    def __init__(self, message: str):
+        super().__init__(message, HTTPStatus.UNPROCESSABLE_ENTITY)
+
+class UnprocessableSchema(AppException):
+    Class exception for unprocessable schemas
+    def __init__(self, message):
+        super().__init__(message, HTTPStatus.UNPROCESSABLE_ENTITY)
 
 @error.app_errorhandler(AppException)
 def handle_custom_exception(error):
@@ -26,7 +64,7 @@ def handle_orm_exception(error):
     if platform != "prod":
         return make_response(
             jsonify({
-                "message": error.message, 
+                "message": error.args[0],
                 "status": HTTPStatus.INTERNAL_SERVER_ERROR
             }),
             HTTPStatus.INTERNAL_SERVER_ERROR
@@ -34,8 +72,8 @@ def handle_orm_exception(error):
 
     return make_response(
         jsonify({
-            "message":"Something went wrong. Contact the Administrator", 
-            "status": HTTPStatus.INTERNAL_SERVER_ERROR 
+            "message":"Something went wrong. Contact the Administrator",
+            "status": HTTPStatus.INTERNAL_SERVER_ERROR
         }),
         HTTPStatus.INTERNAL_SERVER_ERROR
     )
@@ -47,16 +85,16 @@ def handle_validation_error(error):
     if platform != "prod":
         return make_response(
             jsonify({
-                "message": error.message, 
-                "status": HTTPStatus.UNPROCESSABLE_ENTITY 
+                "message": error.args[0],
+                "status": HTTPStatus.UNPROCESSABLE_ENTITY
             }),
             HTTPStatus.UNPROCESSABLE_ENTITY
         )
 
     return make_response(
         jsonify({
-            "message":"Something while validating the fields", 
-            "status": HTTPStatus.UNPROCESSABLE_ENTITY 
+            "message":"Something while validating the fields",
+            "status": HTTPStatus.UNPROCESSABLE_ENTITY
         }),
         HTTPStatus.UNPROCESSABLE_ENTITY
     )
@@ -81,7 +119,7 @@ def handle_base_http_exception(error):
             "message": error.description,
             "status": error.code
         }), error.code
-    )   
+    )
 
 @error.app_errorhandler(Exception)
 def handle_base_exception(error):
@@ -95,13 +133,13 @@ def handle_base_exception(error):
                 "status": HTTPStatus.INTERNAL_SERVER_ERROR
             }), HTTPStatus.INTERNAL_SERVER_ERROR
         )
-    
+
     return make_response(
     jsonify({
-        "message":"Something went wrong. Contact the Administrator", 
-        "status": HTTPStatus.INTERNAL_SERVER_ERROR 
+        "message":"Something went wrong. Contact the Administrator",
+        "status": HTTPStatus.INTERNAL_SERVER_ERROR
     }),
     HTTPStatus.INTERNAL_SERVER_ERROR
 )
-    
-    
+
+"""
